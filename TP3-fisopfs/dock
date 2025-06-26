@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+##
+## Usage: dock {build|run|exec}
+##
+
+DOCKER="docker"
+EXEC_CMD="exec"
+BUILD_CMD="build"
+RUN_CMD="container run"
+CONTAINER_NAME="fs"
+IMAGE_NAME="fisop-fs"
+
+usage() {
+        echo "Usage: $0 {build|run|exec}"
+        exit 1
+}
+
+build_container() {
+        $DOCKER $BUILD_CMD -t $IMAGE_NAME -f Dockerfile .
+}
+
+run_container() {
+        $DOCKER $RUN_CMD -it --rm --name=$CONTAINER_NAME \
+		-v $(pwd):/fisopfs \
+		--device /dev/fuse \
+		--cap-add SYS_ADMIN \
+		--security-opt apparmor:unconfined \
+		$IMAGE_NAME bash
+}
+
+exec_container() {
+        $DOCKER $EXEC_CMD -it $CONTAINER_NAME bash
+}
+
+main() {
+        case $1 in
+                "build")
+                        build_container
+                ;;
+                "run")
+                        run_container
+                ;;
+                "exec")
+                        exec_container
+                ;;
+                *)
+                        usage
+                ;;
+        esac
+
+}
+
+main $1
